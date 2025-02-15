@@ -1,0 +1,55 @@
+name: Terraform Pipeline
+
+on:
+  push:
+    branches:
+      - main  # Executa o workflow quando há push para a branch main
+  pull_request:
+    branches:
+      - main  # Executa o workflow em pull requests para a branch main
+
+jobs:
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout do código
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Configurar credenciais da AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      # Instalar o Terraform
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest  # Usa a versão mais recente do Terraform
+
+      # Inicializar o Terraform
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      # Validar os arquivos Terraform
+      - name: Terraform Validate
+        id: validate
+        run: terraform validate
+
+      # Gerar um plano de execução
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false
+        continue-on-error: true
+
+      # Aplicar as mudanças (opcional, pode ser manual)
+      - name: Terraform Apply
+        id: apply
+        run: terraform apply -auto-approve -input=false
+        if: github.ref == 'refs/heads/main'  # Aplica apenas na branch main
