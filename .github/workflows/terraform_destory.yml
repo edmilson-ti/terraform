@@ -1,0 +1,46 @@
+name: Destroy Terraform Infrastructure
+on:
+  push:
+    branches:
+      - destroy  # Executa o workflow quando há push para a branch destroy
+  workflow_dispatch:
+
+jobs:
+  Terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout do código
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # Configurar credenciais da AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+     
+      # Instalar o Terraform
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: latest  # Usa a versão mais recente do Terraform
+
+      # Inicializar o Terraform
+      - name: Terraform Init
+        id: init
+        run: terraform init
+
+      # Gerar um plano de execução
+      - name: Terraform Plan
+        id: plan
+        run: terraform plan -input=false
+        continue-on-error: true
+
+      # Destruir o ambiente
+      - name: Terraform Destroy
+        id: destroy
+        run: terraform destroy -auto-approve -input=false
+        if: github.ref == 'refs/heads/destroy'  # Aplica apenas na branch destroy
