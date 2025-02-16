@@ -1,15 +1,12 @@
 name: Terraform Pipeline
-
 on:
   push:
     branches:
       - main  # Executa o workflow quando há push para a branch main
-  pull_request:
-    branches:
-      - main  # Executa o workflow em pull requests para a branch main
+  workflow_dispatch:
 
 jobs:
-  TerraformApply:
+  Terraform:
     runs-on: ubuntu-latest
 
     steps:
